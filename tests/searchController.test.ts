@@ -86,14 +86,55 @@ describe("createCountrySearchHandler", () => {
     expect(statusUpdates.at(-1)).toBe("");
   });
 
-  test("keeps a timeout as a visible error", async () => {
-    fetchMock.mockRejectedValueOnce(
-      new DOMException("Timed out", "TimeoutError"),
-    );
+  test("composes input abort with a 10-second timeout signal", async () => {
+    const timeoutControllers: AbortController[] = [];
+    const timeoutDurations: number[] = [];
+    const timeoutSpy = jest
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((duration) => {
+        timeoutDurations.push(duration);
+        const controller = new AbortController();
+        timeoutControllers.push(controller);
+        return controller.signal;
+      });
+    const requestSignals: AbortSignal[] = [];
+
+    fetchMock.mockImplementation((_input, init) => {
+      const signal = init?.signal;
+      if (signal === undefined || signal === null) {
+        return Promise.reject(new Error("Expected an abort signal"));
+      }
+
+      requestSignals.push(signal);
+      return new Promise<Response>((_resolve, reject) => {
+        if (signal.aborted) {
+          reject(signal.reason);
+          return;
+        }
+        signal.addEventListener("abort", () => reject(signal.reason), {
+          once: true,
+        });
+      });
+    });
+
+    handleInput("ca");
+    await jest.advanceTimersByTimeAsync(300);
+    expect(timeoutSpy).toHaveBeenCalledWith(10_000);
+    expect(requestSignals).toHaveLength(1);
 
     handleInput("canada");
-    await jest.advanceTimersByTimeAsync(300);
+    expect(requestSignals[0].aborted).toBe(true);
+    await Promise.resolve();
+    expect(statusUpdates.at(-1)).toBe("Searching…");
 
+    await jest.advanceTimersByTimeAsync(300);
+    expect(requestSignals).toHaveLength(2);
+    expect(timeoutDurations).toEqual([10_000, 10_000]);
+
+    timeoutControllers[1].abort(new DOMException("Timed out", "TimeoutError"));
+    expect(requestSignals[1].aborted).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
     expect(statusUpdates.at(-1)).toBe("Search failed.");
   });
 
