@@ -1,4 +1,8 @@
 export function isAbortError(error: unknown): boolean {
-  void error;
-  return false;
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "AbortError"
+  );
 }
