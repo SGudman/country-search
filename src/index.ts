@@ -1,3 +1,5 @@
+import { createCountrySearchHandler } from "./searchController.js";
+
 const header = document.createElement("header");
 header.className = "site-header";
 
@@ -40,3 +42,16 @@ results.setAttribute("aria-live", "polite");
 searchPanel.append(label, input, statusRegion, results);
 main.append(searchPanel);
 document.body.append(header, main);
+
+const handleCountrySearch = createCountrySearchHandler({
+  onResults: () => {
+    results.replaceChildren();
+  },
+  onStatus: (message) => {
+    statusRegion.textContent = message;
+  },
+});
+
+input.addEventListener("input", () => {
+  handleCountrySearch(input.value);
+});
