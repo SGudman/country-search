@@ -1,0 +1,122 @@
+:root {
+  --paper: #f4efe5;
+  --ink: #302a24;
+  --muted: #655b4f;
+  --line: #c9beac;
+  --accent: #805638;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100svh;
+  flex-direction: column;
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.site-header,
+.country-search-main {
+  width: min(calc(100% - 48px), 1120px);
+  margin-inline: auto;
+}
+
+.site-header {
+  padding: 26px 0 16px;
+  border-bottom: 3px double var(--ink);
+}
+
+.site-header h1 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.country-search-main {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  padding-block: clamp(48px, 12vh, 96px);
+}
+
+.search-panel {
+  width: min(100%, 780px);
+  margin-inline: auto;
+}
+
+.search-panel label {
+  display: block;
+  margin-bottom: 18px;
+  font-family: Georgia, serif;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 400;
+}
+
+.country-search-input {
+  display: block;
+  width: 100%;
+  min-height: 80px;
+  padding: 12px 2px;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(24px, 4vw, 40px);
+}
+
+.country-search-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.search-status {
+  min-height: 1.6em;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.search-results {
+  margin-top: 32px;
+}
+
+@media (max-width: 600px) {
+  .site-header,
+  .country-search-main {
+    width: calc(100% - 32px);
+  }
+
+  .site-header {
+    padding-top: 20px;
+  }
+
+  .country-search-main {
+    padding-block: clamp(48px, 10vh, 80px);
+  }
+
+  .search-panel label {
+    margin-bottom: 14px;
+    font-size: 20px;
+  }
+
+  .country-search-input {
+    min-height: 68px;
+    padding: 10px 0;
+    font-size: clamp(24px, 8vw, 34px);
+  }
+
+  .search-results {
+    margin-top: 28px;
+  }
+}
