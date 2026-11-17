@@ -32,7 +32,6 @@ input.id = "country-search-input";
 input.className = "country-search-input";
 input.name = "country";
 input.type = "search";
-input.placeholder = "Search countries…";
 input.autocomplete = "off";
 input.setAttribute("aria-controls", "country-results");
 
@@ -43,24 +42,58 @@ searchIcon.setAttribute("viewBox", "0 0 24 24");
 searchIcon.setAttribute("aria-hidden", "true");
 searchIcon.setAttribute("focusable", "false");
 
-const searchIconCircle = document.createElementNS(svgNamespace, "circle");
-searchIconCircle.setAttribute("cx", "10.5");
-searchIconCircle.setAttribute("cy", "10.5");
-searchIconCircle.setAttribute("r", "6.5");
-searchIconCircle.setAttribute("fill", "none");
-searchIconCircle.setAttribute("stroke", "currentColor");
-searchIconCircle.setAttribute("stroke-width", "1.7");
+const searchIconLine = document.createElementNS(svgNamespace, "line");
+searchIconLine.setAttribute("x1", "5");
+searchIconLine.setAttribute("y1", "12");
+searchIconLine.setAttribute("x2", "19");
+searchIconLine.setAttribute("y2", "12");
+searchIconLine.setAttribute("stroke", "currentColor");
+searchIconLine.setAttribute("stroke-width", "1.7");
+searchIconLine.setAttribute("stroke-linecap", "round");
 
-const searchIconHandle = document.createElementNS(svgNamespace, "line");
-searchIconHandle.setAttribute("x1", "15.5");
-searchIconHandle.setAttribute("y1", "15.5");
-searchIconHandle.setAttribute("x2", "19.5");
-searchIconHandle.setAttribute("y2", "19.5");
-searchIconHandle.setAttribute("stroke", "currentColor");
-searchIconHandle.setAttribute("stroke-width", "1.7");
+const searchIconChevron = document.createElementNS(svgNamespace, "polyline");
+searchIconChevron.setAttribute("points", "13 6 19 12 13 18");
+searchIconChevron.setAttribute("fill", "none");
+searchIconChevron.setAttribute("stroke", "currentColor");
+searchIconChevron.setAttribute("stroke-width", "1.7");
+searchIconChevron.setAttribute("stroke-linecap", "round");
+searchIconChevron.setAttribute("stroke-linejoin", "round");
 
-searchIcon.append(searchIconCircle, searchIconHandle);
-searchInputWrapper.append(searchIcon, input);
+searchIcon.append(searchIconLine, searchIconChevron);
+
+const clearButton = document.createElement("button");
+clearButton.className = "search-clear-button";
+clearButton.type = "button";
+clearButton.setAttribute("aria-label", "Clear search");
+clearButton.hidden = true;
+
+const clearIcon = document.createElementNS(svgNamespace, "svg");
+clearIcon.classList.add("search-clear-icon");
+clearIcon.setAttribute("viewBox", "0 0 24 24");
+clearIcon.setAttribute("aria-hidden", "true");
+clearIcon.setAttribute("focusable", "false");
+
+const clearIconLineOne = document.createElementNS(svgNamespace, "line");
+clearIconLineOne.setAttribute("x1", "7");
+clearIconLineOne.setAttribute("y1", "7");
+clearIconLineOne.setAttribute("x2", "17");
+clearIconLineOne.setAttribute("y2", "17");
+clearIconLineOne.setAttribute("stroke", "currentColor");
+clearIconLineOne.setAttribute("stroke-width", "1.7");
+clearIconLineOne.setAttribute("stroke-linecap", "round");
+
+const clearIconLineTwo = document.createElementNS(svgNamespace, "line");
+clearIconLineTwo.setAttribute("x1", "17");
+clearIconLineTwo.setAttribute("y1", "7");
+clearIconLineTwo.setAttribute("x2", "7");
+clearIconLineTwo.setAttribute("y2", "17");
+clearIconLineTwo.setAttribute("stroke", "currentColor");
+clearIconLineTwo.setAttribute("stroke-width", "1.7");
+clearIconLineTwo.setAttribute("stroke-linecap", "round");
+
+clearIcon.append(clearIconLineOne, clearIconLineTwo);
+clearButton.append(clearIcon);
+searchInputWrapper.append(searchIcon, input, clearButton);
 
 const searchFeedback = document.createElement("div");
 searchFeedback.className = "search-feedback";
@@ -136,43 +169,52 @@ function showCountryDetails(
   const heading = document.createElement("div");
   heading.className = "country-detail__heading";
 
-  if (country.flag !== null) {
-    const flag = document.createElement("span");
-    flag.className = "country-detail__flag";
+  const flag = document.createElement("span");
+  flag.className = "country-detail__flag";
+  if (country.flag) {
     flag.setAttribute("aria-hidden", "true");
     flag.textContent = country.flag;
-    heading.append(flag);
+  } else {
+    flag.textContent = "—";
   }
+  heading.append(flag);
 
   const name = document.createElement("h2");
   name.id = "country-detail-title";
   name.className = "country-detail__title";
-  name.textContent = country.name;
+  name.textContent = country.name || "—";
   heading.append(name);
   detailView.setAttribute("aria-labelledby", name.id);
 
   const description = document.createElement("p");
   description.className = "country-detail__description";
-  description.textContent =
-    country.description ?? "Not provided by the data source.";
+  description.textContent = country.description || "—";
 
   const facts = document.createElement("dl");
   facts.className = "country-detail__facts";
 
-  if (country.area !== null) {
-    addDetailField(facts, "Area", formatNumber(country.area));
-  }
-  if (country.borders.length > 0) {
-    addDetailField(facts, "Borders", country.borders.join(", "));
-  }
-  if (country.languages.length > 0) {
-    addDetailField(facts, "Languages", country.languages.join(", "));
-  }
-  if (country.currencies.length > 0) {
-    const currencyLabel =
-      country.currencies.length === 1 ? "Currency" : "Currencies";
-    addDetailField(facts, currencyLabel, country.currencies.join(", "));
-  }
+  addDetailField(
+    facts,
+    "Area",
+    country.area === null ? "—" : formatNumber(country.area),
+  );
+  addDetailField(
+    facts,
+    "Borders",
+    country.borders.length === 0 ? "—" : country.borders.join(", "),
+  );
+  addDetailField(
+    facts,
+    "Languages",
+    country.languages.length === 0 ? "—" : country.languages.join(", "),
+  );
+  const currencyLabel =
+    country.currencies.length === 1 ? "Currency" : "Currencies";
+  addDetailField(
+    facts,
+    currencyLabel,
+    country.currencies.length === 0 ? "—" : country.currencies.join(", "),
+  );
 
   detailView.replaceChildren(backButton, heading, description, facts);
   results.hidden = true;
@@ -197,30 +239,34 @@ function renderCountryResults(countries: CountryCardData[]): void {
     const button = document.createElement("button");
     button.className = "country-card__button";
     button.type = "button";
-    if (country.flag === null) {
+    if (!country.flag) {
       button.classList.add("country-card__button--no-flag");
     }
 
-    if (country.flag !== null) {
-      const flag = document.createElement("span");
-      flag.className = "country-card__flag";
+    const flag = document.createElement("span");
+    flag.className = "country-card__flag";
+    if (country.flag) {
       flag.setAttribute("aria-hidden", "true");
       flag.textContent = country.flag;
-      button.append(flag);
+    } else {
+      flag.textContent = "—";
     }
+    button.append(flag);
 
     const name = document.createElement("span");
     name.className = "country-card__name";
-    name.textContent = country.name;
+    name.textContent = country.name || "—";
 
     const facts = document.createElement("span");
     facts.className = "country-card__facts";
     const summary = [
-      country.capital === null ? null : `Capital: ${country.capital}`,
-      country.region === null ? null : `Region: ${country.region}`,
-      `Population: ${formatNumber(country.population)}`,
+      `Capital: ${country.capital || "—"}`,
+      `Region: ${country.region || "—"}`,
+      `Population: ${
+        country.population === null ? "—" : formatNumber(country.population)
+      }`,
     ];
-    facts.textContent = summary.filter((fact) => fact !== null).join(" · ");
+    facts.textContent = summary.join(" · ");
 
     button.append(name, facts);
     button.addEventListener("click", () => {
@@ -242,7 +288,14 @@ const handleCountrySearch = createCountrySearchHandler({
 });
 
 input.addEventListener("input", () => {
+  clearButton.hidden = input.value.trim() === "";
   handleCountrySearch(input.value);
+});
+
+clearButton.addEventListener("click", () => {
+  input.value = "";
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
 });
 
 retryButton.addEventListener("click", () => {
