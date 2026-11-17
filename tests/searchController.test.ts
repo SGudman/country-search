@@ -175,7 +175,8 @@ describe("createCountrySearchHandler", () => {
         capital: "Ottawa",
         region: "Americas",
         population: 38005238,
-        description: null,
+        description:
+          "Canada is in Northern America. Its capital is Ottawa. Population: 38,005,238.",
         area: 9984670,
         borders: ["USA"],
         languages: ["English", "French"],
