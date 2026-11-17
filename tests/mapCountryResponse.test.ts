@@ -7,7 +7,11 @@ describe("mapCountryResponse", () => {
       flag: "🇨🇦",
       capital: "Ottawa",
       region: "Americas",
+      subregion: "Northern America",
       population: 38005238,
+      area: 9984670,
+      borders: ["USA"],
+      currencies: [{ code: "CAD", name: "Canadian dollar", symbol: "$" }],
       languages: [
         {
           name: "English",
@@ -30,7 +34,11 @@ describe("mapCountryResponse", () => {
       capital: "Ottawa",
       region: "Americas",
       population: 38005238,
+      description: null,
+      area: 9984670,
+      borders: ["USA"],
       languages: ["English", "French"],
+      currencies: ["Canadian dollar"],
     });
   });
 
@@ -46,7 +54,11 @@ describe("mapCountryResponse", () => {
       capital: null,
       region: null,
       population: 9216900,
+      description: null,
+      area: null,
+      borders: [],
       languages: [],
+      currencies: [],
     });
   });
 });

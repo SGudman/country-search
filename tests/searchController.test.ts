@@ -114,8 +114,12 @@ describe("createCountrySearchHandler", () => {
         flag: "🇨🇦",
         capital: "Ottawa",
         region: "Americas",
+        subregion: "Northern America",
         population: 38005238,
+        area: 9984670,
+        borders: ["USA"],
         languages: [{ name: "English" }, { name: "French" }],
+        currencies: [{ name: "Canadian dollar" }],
       },
     ];
     fetchMock.mockResolvedValueOnce(createResponse(true, 200, rawCountries));
@@ -130,7 +134,11 @@ describe("createCountrySearchHandler", () => {
         capital: "Ottawa",
         region: "Americas",
         population: 38005238,
+        description: null,
+        area: 9984670,
+        borders: ["USA"],
         languages: ["English", "French"],
+        currencies: ["Canadian dollar"],
       },
     ]);
     expect(statusUpdates.at(-1)).toBe("1 result.");
