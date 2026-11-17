@@ -1,7 +1,14 @@
 export function debounce<Args extends unknown[]>(
   callback: (...args: Args) => void,
-  _delay: number,
+  delay: number,
 ): (...args: Args) => void {
-  void _delay;
-  return callback;
+  let timerId: ReturnType<typeof setTimeout> | undefined;
+
+  return (...args: Args) => {
+    if (timerId !== undefined) {
+      clearTimeout(timerId);
+    }
+
+    timerId = setTimeout(() => callback(...args), delay);
+  };
 }
