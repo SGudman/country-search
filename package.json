@@ -6,7 +6,7 @@
     "build": "tsc",
     "lint": "eslint . --ext .ts,.cjs",
     "format": "prettier --check .",
-    "test": "jest --passWithNoTests",
+    "test": "jest",
     "prepare": "husky"
   },
   "lint-staged": {
