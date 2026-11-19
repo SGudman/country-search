@@ -1,4 +1,5 @@
 import { createCountrySearchHandler } from "./searchController.js";
+import { loadSearchHistory, recordSearchHistory } from "./searchHistory.js";
 import type { CountryCardData } from "./mapCountryResponse.js";
 
 const formatNumber = (value: number): string =>
@@ -111,7 +112,25 @@ retryButton.textContent = "Retry";
 retryButton.hidden = true;
 searchFeedback.append(statusRegion, retryButton);
 
-searchPanel.append(label, searchInputWrapper, searchFeedback);
+const searchHistorySection = document.createElement("section");
+searchHistorySection.className = "search-history";
+searchHistorySection.setAttribute("aria-label", "Recent searches");
+searchHistorySection.hidden = true;
+
+const searchHistoryHeading = document.createElement("h2");
+searchHistoryHeading.className = "search-history__title";
+searchHistoryHeading.textContent = "Recent searches";
+
+const searchHistoryList = document.createElement("ul");
+searchHistoryList.className = "search-history__list";
+searchHistorySection.append(searchHistoryHeading, searchHistoryList);
+
+searchPanel.append(
+  label,
+  searchInputWrapper,
+  searchFeedback,
+  searchHistorySection,
+);
 searchStage.append(title, searchPanel);
 
 const results = document.createElement("section");
@@ -279,13 +298,41 @@ function renderCountryResults(countries: CountryCardData[]): void {
   results.hidden = false;
 }
 
+let searchHistory = loadSearchHistory();
+
+function renderSearchHistory(): void {
+  searchHistoryList.replaceChildren();
+  searchHistorySection.hidden = searchHistory.length === 0;
+
+  for (const query of searchHistory) {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.className = "search-history__button";
+    button.type = "button";
+    button.textContent = query;
+    button.addEventListener("click", () => {
+      input.value = query;
+      clearButton.hidden = false;
+      handleCountrySearch(query, true);
+    });
+    item.append(button);
+    searchHistoryList.append(item);
+  }
+}
+
 const handleCountrySearch = createCountrySearchHandler({
   onResults: renderCountryResults,
   onStatus: (message) => {
     statusRegion.textContent = message;
     retryButton.hidden = message !== "Search failed.";
   },
+  onSearch: (query) => {
+    searchHistory = recordSearchHistory(query, searchHistory);
+    renderSearchHistory();
+  },
 });
+
+renderSearchHistory();
 
 input.addEventListener("input", () => {
   clearButton.hidden = input.value.trim() === "";

@@ -9,6 +9,7 @@ type CountryCardData = ReturnType<typeof mapCountryResponse>;
 type SearchCallbacks = {
   onResults: (countries: CountryCardData[]) => void;
   onStatus: (message: string) => void;
+  onSearch?: (query: string) => void;
 };
 
 const DEBOUNCE_DELAY_MS = 300;
@@ -17,7 +18,8 @@ const REQUEST_TIMEOUT_MS = 10_000;
 export function createCountrySearchHandler({
   onResults,
   onStatus,
-}: SearchCallbacks): (query: string) => void {
+  onSearch,
+}: SearchCallbacks): (query: string, immediate?: boolean) => void {
   let activeController: AbortController | undefined;
 
   async function runSearch(
@@ -25,6 +27,7 @@ export function createCountrySearchHandler({
     requestController: AbortController,
   ): Promise<void> {
     try {
+      onSearch?.(query);
       const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
       const signal = AbortSignal.any([requestController.signal, timeoutSignal]);
       const rawCountries = await searchCountries(query, signal);
@@ -66,7 +69,7 @@ export function createCountrySearchHandler({
     DEBOUNCE_DELAY_MS,
   );
 
-  return (query: string): void => {
+  return (query: string, immediate = false): void => {
     activeController?.abort();
     activeController = undefined;
     onResults([]);
@@ -80,6 +83,11 @@ export function createCountrySearchHandler({
     const requestController = new AbortController();
     activeController = requestController;
     onStatus("Searching…");
+    if (immediate) {
+      void runSearch(normalizedQuery, requestController);
+      return;
+    }
+
     debouncedSearch(normalizedQuery, requestController);
   };
 }

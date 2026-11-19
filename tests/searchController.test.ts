@@ -13,6 +13,7 @@ describe("createCountrySearchHandler", () => {
   let fetchMock: jest.SpyInstance;
   let resultUpdates: ReturnType<typeof mapCountryResponse>[][];
   let statusUpdates: string[];
+  let searchUpdates: string[];
   let handleInput: (query: string) => void;
 
   beforeEach(() => {
@@ -20,14 +21,19 @@ describe("createCountrySearchHandler", () => {
     fetchMock = jest.spyOn(globalThis, "fetch");
     resultUpdates = [];
     statusUpdates = [];
-    handleInput = createCountrySearchHandler({
-      onResults: (countries) => {
+    searchUpdates = [];
+    const callbacks = {
+      onResults: (countries: ReturnType<typeof mapCountryResponse>[]) => {
         resultUpdates.push(countries);
       },
-      onStatus: (status) => {
+      onStatus: (status: string) => {
         statusUpdates.push(status);
       },
-    });
+      onSearch: (query: string) => {
+        searchUpdates.push(query);
+      },
+    };
+    handleInput = createCountrySearchHandler(callbacks);
   });
 
   afterEach(() => {
@@ -136,6 +142,30 @@ describe("createCountrySearchHandler", () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(statusUpdates.at(-1)).toBe("Search failed.");
+  });
+
+  test("records only searches that reach the request after debounce", async () => {
+    fetchMock.mockResolvedValueOnce(createResponse(true, 200, []));
+
+    handleInput("canada");
+    await jest.advanceTimersByTimeAsync(299);
+    expect(searchUpdates).toEqual([]);
+
+    await jest.advanceTimersByTimeAsync(1);
+    expect(searchUpdates).toEqual(["canada"]);
+  });
+
+  test("starts a history repeat immediately instead of waiting for debounce", () => {
+    fetchMock.mockResolvedValueOnce(createResponse(true, 200, []));
+    const searchWithImmediateOption = handleInput as (
+      query: string,
+      immediate?: boolean,
+    ) => void;
+
+    searchWithImmediateOption("canada", true);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(searchUpdates).toEqual(["canada"]);
   });
 
   test("keeps a 404 as an empty result instead of an error", async () => {
